@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello World</title>
+    <link rel="stylesheet" type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/dijit/themes/tundra/tundra.css"/>
+    <link rel="stylesheet" type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/esri/css/esri.css" />
+    <script type="text/javascript" src="http://localhost/arcgis_js_api/library/3.17/3.17/init.js"></script>
+    <script>
+        require(["esri/map","dojo/query","dojo/on",
+                    "esri/layers/ArcGISDynamicMapServiceLayer",
+                    "esri/tasks/QueryTask",
+                    "esri/tasks/query",
+                    "esri/symbols/SimpleLineSymbol",
+                    "esri/symbols/SimpleFillSymbol",
+                    "esri/Color",
+                    "esri/graphic",
+                    "dojo/domReady!"],
+                function(Map,query,on,ArcGISDynamicMapServiceLayer,QueryTask,Query,SimpleLineSymbol,SimpleFillSymbol,Color,Graphic){
+                    var map = new Map("mapDiv");
+                    var layer=new ArcGISDynamicMapServiceLayer("http://localhost:6080/arcgis/rest/services/Test/MyServer/MapServer");
+                    map.addLayer(layer);
+                    map.on("click",mapClick);
+                    function mapClick(e){
+                        //获得用户点击的地图坐标
+                        var point=e.mapPoint;
+                        //实例化查询参数
+                        query=new Query();
+                        query.geometry = point;
+                        query.outFields = ["*"];
+                        query.outSpatialReference = map.spatialReference;
+                        query.spatialRelationship = Query.SPATIAL_REL_INTERSECTS;
+                        query.returnGeometry = true;
+                        //实例化查询对象
+                        var queryTask = new QueryTask("http://localhost:6080/arcgis/rest/services/Test/MyServer/MapServer/3");
+                        //进行查询
+                        queryTask.execute(query,showFindResult)
+
+                    }
+                    function showFindResult(queryResult)
+                    {
+                        if (queryResult.features == 0) {
+                            alert("没有该元素");
+                            return;
+                        }
+                        for (var i = 0; i < queryResult.features.length; i++) {
+                            //获得该图形的形状
+                            var feature = queryResult.features[i];
+                            var geometry = feature.geometry;
+                            //定义高亮图形的符号
+                            //1.定义面的边界线符号
+                            var outline= new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASHDOT,new Color([255, 0, 0]), 1);
+                            //2.定义面符号
+                            var PolygonSymbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, outline,new Color([0, 255, 0, 1]));
+                            //创建客户端图形
+                            var graphic = new Graphic(geometry, PolygonSymbol);
+                            //将客户端图形添加到map中
+                            map.graphics.add(graphic);
+                        }
+                    }
+                })
+    </script>
+</head>
+<body class="tundra">
+<div id="mapDiv" style="width:900px; height:580px; border:1px solid #000;"></div>
+</body>
+</html>
