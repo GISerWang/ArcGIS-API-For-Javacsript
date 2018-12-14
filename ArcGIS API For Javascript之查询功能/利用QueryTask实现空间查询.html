@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>QueryTask</title>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/dijit/themes/tundra/tundra.css"/>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/esri/css/esri.css" />
+    <script  type="text/Javascript" src="http://localhost/arcgis_js_api/library/3.17/3.17/init.js"></script>
+    <style type="text/css">
+        .MapClass{
+            width:100%;
+            height:600px;
+            border:1px solid #000;
+        }
+    </style>
+    <script type="text/javascript">
+
+        require(["esri/map",
+            "esri/layers/ArcGISDynamicMapServiceLayer",
+            "dojo/dom",
+            "dojo/on",
+            "esri/tasks/QueryTask",
+            "esri/tasks/query",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/symbols/SimpleFillSymbol", 
+            "esri/graphic",
+            "dojo/domReady!"],
+            function (Map, ArcGISDynamicMapServiceLayer,dom, on,
+            QueryTask, Query,
+            SimpleLineSymbol,SimpleFillSymbol,Graphic) {
+                //根据div的id属性创建地图
+                var map = new Map("mapDiv");
+                //定义一个动态地图服务
+                var layer = new ArcGISDynamicMapServiceLayer
+                ("http://localhost:6080/arcgis/rest/services/Test/MyService/MapServer");
+                //将图层添加到地图
+                map.addLayer(layer)
+                //给属性查询按钮添加click事件
+                on(dom.byId("Btn"),"click",function(e){
+                    //定义查询对象
+                    var queryTask = new QueryTask
+                    ("http://localhost:6080/arcgis/rest/services/Test/MyService/MapServer/1");
+                    //定义查询参数对象
+                    var query = new Query();
+                    //查询条件，类似于sql语句的where子句
+                    query.where = "name = 'J4'";;
+                    //返回的字段信息：*代表返回全部字段
+                    query.outFields = ["*"];
+                    //是否返回几何形状
+                    query.returnGeometry = true;
+                    //执行属性查询
+                    queryTask.execute(query, showQueryResult);
+                })
+                //属性查询完成之后，用showQueryResult来处理返回的结果
+                function showQueryResult(queryResult)
+                {
+                    //创建线符号
+                    var lineSymbol=new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASH, new dojo.Color([255, 0, 0]), 3);
+                    //创建面符号
+                    var fill=new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol);
+                    if (queryResult.features.length == 0) {
+                        dom.byId("divShowResult").innerHTML = "";
+                        return;
+                    }
+                    var htmls = "";
+                    if (queryResult.features.length >= 1) {
+                        htmls = htmls + "<table style=\"width: 100%\">";
+                        htmls = htmls + "<tr><td>名称</td></tr>";
+                        for (var i = 0; i < queryResult.features.length; i++) {
+                            //获得图形graphic
+                            var graphic = queryResult.features[i];
+                            //赋予相应的符号
+                            graphic.setSymbol(fill);
+                            //将graphic添加到地图中，从而实现高亮效果
+                            map.graphics.add(graphic);
+                            //获得教学楼名称（此处是和shp属性表对应的）
+                            var ptName = graphic.attributes["alias"];
+                            if (i % 2 == 0)
+                                htmls = htmls + "<tr>";
+                            else
+                                htmls = htmls + "<tr bgcolor=\"#F0F0F0\">";
+                            htmls = htmls + "<td><a href=\"#\" \">" + ptName + "</a></td>";
+                            htmls = htmls + "</tr>";
+                        }
+                        htmls = htmls + "</table>";
+                        //将属性绑定在divShowResult上面
+                        dom.byId("divShowResult").innerHTML = htmls;
+                    }
+                }
+
+
+
+
+            });
+
+
+    </script>
+</head>
+<body>
+    <div id="mapDiv" class="MapClass"></div>
+    <input type="button" value="属性查询" id="Btn"/>
+    <div id="divShowResult"></div>
+</body>
+</html>

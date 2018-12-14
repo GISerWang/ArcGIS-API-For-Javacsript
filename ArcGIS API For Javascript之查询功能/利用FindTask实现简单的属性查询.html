@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>FindTask</title>
+     <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/dijit/themes/tundra/tundra.css"/>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/esri/css/esri.css" />
+    <script  type="text/Javascript" src="http://localhost/arcgis_js_api/library/3.17/3.17/init.js"></script>
+    <style type="text/css">
+        .MapClass{
+            width:100%;
+            height:600px;
+            border:1px solid #000;
+        }
+    </style>
+    <script type="text/javascript">
+
+        require(["esri/map",
+            "esri/layers/ArcGISDynamicMapServiceLayer",
+            "dojo/on",
+            "dojo/dom",
+            "esri/tasks/FindTask",
+            "esri/tasks/FindParameters",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/symbols/SimpleFillSymbol", 
+            "esri/graphic",
+            "dojo/domReady!"],
+            function (Map, ArcGISDynamicMapServiceLayer,on,dom,
+            FindTask, FindParameters, 
+            SimpleLineSymbol,SimpleFillSymbol,Graphic) {   
+                var map = new esri.Map("mapDiv");
+                //地图服务的URL
+                var MapServer = "http://localhost:6080/arcgis/rest/services/Test/MyService/MapServer";
+                var layer = new esri.layers.ArcGISDynamicMapServiceLayer(MapServer);
+                map.addLayer(layer)
+                //创建属性查询对象
+                var findTask = new FindTask(MapServer);
+                //创建属性查询参数
+                var findParams = new FindParameters();
+                on(dom.byId("Btn"),"click",function(){
+                    //是否返回给我们几何信息
+                    findParams.returnGeometry = true;
+                    //对哪一个图层进行属性查询
+                    findParams.layerIds = [1];
+                    //查询的字段
+                    findParams.searchFields = ["name"];
+                    //searchText和searchFields结合使用，即查询name=J4
+                    findParams.searchText = "J4";
+                    //执行查询对象
+                    findTask.execute(findParams, ShowFindResult);
+                })
+                function ShowFindResult(queryResult) {
+                    //创建线符号
+                    var lineSymbol=new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASH, new dojo.Color([255, 0, 0]), 3);
+                    //创建面符号
+                    var fill=new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol);
+                    if (queryResult.length == 0) {
+                        dom.byId("divShowResult").innerHTML = "";
+                        return;
+                    }
+                    var htmls = "";
+                    if (queryResult.length >= 1) {
+                        htmls = htmls + "<table style=\"width: 100%\">";
+                        htmls = htmls + "<tr><td>名称</td></tr>";
+                        for (var i = 0; i < queryResult.length; i++) {
+                            //获得图形graphic
+                            var graphic = queryResult[i].feature;
+                            //赋予相应的符号
+                            graphic.setSymbol(fill);
+                            //将graphic添加到地图中，从而实现高亮效果
+                            map.graphics.add(graphic);
+                            //获得教学楼名称（此处是和shp属性表对应的）
+                            var ptName = graphic.attributes["alias"];
+                            if (i % 2 == 0)
+                                htmls = htmls + "<tr>";
+                            else
+                                htmls = htmls + "<tr bgcolor=\"#F0F0F0\">";
+                            htmls = htmls + "<td><a href=\"#\" \">" + ptName + "</a></td>";
+                            htmls = htmls + "</tr>";
+                        }
+                        htmls = htmls + "</table>";
+                        //将属性绑定在divShowResult上面
+                        dom.byId("divShowResult").innerHTML = htmls;
+                    }
+                }
+
+        });
+
+
+    </script>
+</head>
+<body>
+    <div id="mapDiv" class="MapClass"></div> 
+    <input type="button" value="属性查询" id="Btn"/>
+    <div id="divShowResult"></div>
+</body>
+</html>
