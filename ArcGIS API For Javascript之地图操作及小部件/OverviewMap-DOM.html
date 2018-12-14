@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <!--The viewport meta tag is used to improve the presentation and behavior of the samples 
+      on iOS devices-->
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>Overview Map</title>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/dijit/themes/tundra/tundra.css"/>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/esri/css/esri.css" />
+    <script  type="text/Javascript" src="http://localhost/arcgis_js_api/library/3.17/3.17/init.js"></script>
+    <style>
+		.MapClass{
+            width:600px;
+            height:400px;
+            border:1px solid #000;
+        }
+        #view {
+           height: 100px;
+           width: 100px; 
+           border:1px solid red;
+           border-right-color:blue;
+           position:relative;
+           left:800px;
+           top:-200px;
+
+
+        }
+    </style>
+    <script>
+       
+        require(["esri/map","dojo/dom","esri/dijit/OverviewMap","dojo/domReady!"], function (
+          Map,dom, OverviewMap){
+            var map = new Map("mapDiv",
+            {   
+				basemap: "topo"
+            });
+			//1.创建小部件对象
+            var overviewMapDijit = new OverviewMap({
+                map: map,
+                visible: true,
+            },dom.byId("view"));//指定将小部件绑定在哪个DOM元素上面
+			//2.启用小部件
+            overviewMapDijit.startup();
+        });
+    </script>
+  </head>
+  
+  <body>
+      <div id="mapDiv" class="MapClass"></div>  
+      <div id="view"></div> 
+  </body>
+</html>

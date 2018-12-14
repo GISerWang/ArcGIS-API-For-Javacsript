@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Geometric _Network</title>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/dijit/themes/tundra/tundra.css"/>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/esri/css/esri.css" />
+    <script  type="text/Javascript" src="http://localhost/arcgis_js_api/library/3.17/3.17/init.js"></script>
+    <style type="text/css">
+        .MapClass{
+            width:100%;
+            height:600px;
+            border:1px solid #000;
+        }
+    </style>
+    <script type="text/javascript">
+
+        require(["esri/map",
+            "dojo/on",
+			"dojo/dom",
+            "esri/layers/ArcGISDynamicMapServiceLayer",
+			"dojo/query","esri/toolbars/navigation",
+            "dojo/domReady!"],
+            function (Map,on,dom,
+                ArcGISDynamicMapServiceLayer,query,Navigation      
+                ) {
+                var map = new Map("mapDiv",{
+					logo: false
+				});
+                var layer = new ArcGISDynamicMapServiceLayer
+                ("http://localhost:6080/arcgis/rest/services/Test/MyService/MapServer");
+                map.addLayer(layer)
+				//创建地图操作对象
+				var navToolbar = new Navigation(map);
+				//给按钮添加绑定事件
+				query("button").on("click",function(event){
+					//获得按钮的文本信息
+					var value=event.rangeParent.data;
+					switch(value){
+						case "平移":
+							navToolbar.activate(Navigation.PAN);
+							break;							
+						case "拉框缩小":
+							navToolbar.activate(Navigation.ZOOM_OUT);
+							break;
+						case "拉框放大":
+							navToolbar.activate(Navigation.ZOOM_IN);
+							break;
+						case "全图":
+							navToolbar.zoomToFullExtent();
+							break;
+						case "漫游":
+							//默认是漫游操作
+							navToolbar.deactivate();
+							break;
+					}
+				})
+				               
+            });
+
+
+    </script>
+</head>
+<body class="tundra">
+    <div id="mapDiv" class="MapClass"></div>
+    <button>拉框放大</button>
+    <button>拉框缩小</button>
+    <button>平移</button>
+    <button>全图</button> 
+	<button>漫游</button>
+</body>
+</html>
