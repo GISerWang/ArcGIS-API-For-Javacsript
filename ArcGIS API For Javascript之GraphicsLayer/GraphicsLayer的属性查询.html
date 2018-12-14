@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Graphic</title>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/dijit/themes/tundra/tundra.css"/>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/esri/css/esri.css" />
+    <script  type="text/Javascript" src="http://localhost/arcgis_js_api/library/3.17/3.17/init.js"></script>
+    <style>
+        .MapClass{
+            width:100%;
+            height:500px;
+            border:1px solid #000;
+        }
+    </style>
+    <script>
+        require(["esri/map","esri/layers/ArcGISDynamicMapServiceLayer",
+            "esri/layers/GraphicsLayer",
+            "dojo/on","dojo/query","dojo/colors",
+            "esri/graphic","esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/geometry/Point",
+                    "dojo/domReady!"],
+                function(Map,ArcGISDynamicMapServiceLayer,
+                         GraphicsLayer,on,query,Color,Graphic,
+                         SimpleMarkerSymbol,SimpleLineSymbol,Point){
+            var map = new Map("mapDiv");
+            var layer = new ArcGISDynamicMapServiceLayer
+            ("http://localhost:6080/arcgis/rest/services/Test/MyService/MapServer");
+            map.addLayer(layer);
+            //创建客户端图层
+            var graphicsLayer=new GraphicsLayer();
+            //将客户端图层添加到地图中
+            map.addLayer(graphicsLayer);
+            //添加点图形的函数
+            function addGraphic()
+            {
+                //定义线符号
+                var lineSymbol=new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASH, new Color([255, 0, 0]), 3);
+                //定义点符号l
+                var pSymbol=new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE,10, lineSymbol, new Color([255, 0, 0]));
+                //声明形状
+                var geometry;
+                //声明和图形
+                var graphic;
+                //添加第一个点图形
+                geometry=new Point({
+                    "x":510706,
+                    "y":3986100,
+                    "spatialReference":map.spatialReference,
+
+                });
+                graphic=new Graphic(geometry,pSymbol,{"h":100});
+                graphicsLayer.add(graphic);
+                //添加第二个点图形
+                geometry=new Point({
+                    "x":510326,
+                    "y":3985702,
+                    "spatialReference":map.spatialReference
+                });
+                graphic=new Graphic(geometry,pSymbol,{"h":200});
+                graphicsLayer.add(graphic);
+                //添加第三个点图形
+                geometry=new Point({
+                    "x":510275,
+                    "y":3986100,
+                    "spatialReference":map.spatialReference
+                });
+                graphic=new Graphic(geometry,pSymbol,{"h":300});
+                graphicsLayer.add(graphic);
+            }
+            //调用添加点图形的函数
+            addGraphic();
+            //绑定事件
+            on(graphicsLayer,"click",function(event){
+                var graphic=event.graphic;
+                alert(graphic.attributes["h"]);
+            })
+
+
+        })
+    </script>
+</head>
+<body>
+    <div id="mapDiv" class="MapClass"></div>
+</body>
+</html>

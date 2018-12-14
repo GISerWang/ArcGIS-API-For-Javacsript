@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>WebGIS</title>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/dijit/themes/tundra/tundra.css"/>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/esri/css/esri.css" />
+    <script  type="text/Javascript" src="http://localhost/arcgis_js_api/library/3.17/3.17/init.js"></script>
+    <style type="text/css">
+        .MapClass{
+            width:100%;
+            height:500px;
+            border:1px solid #000;
+        }
+    </style>
+    <script type="text/javascript">
+
+        require(["esri/map","dojo/dom","dojo/on",
+                    "esri/layers/ArcGISDynamicMapServiceLayer",
+                    "dojo/query","esri/toolbars/draw",
+                    "esri/symbols/SimpleLineSymbol","esri/graphic","esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleFillSymbol","dojo/domReady!"],
+            function (Map,dom,on, ArcGISDynamicMapServiceLayer,query, Draw, SimpleLineSymbol,Graphic,SimpleMarkerSymbol,SimpleFillSymbol) {
+            var map = new esri.Map("MyMapDiv");
+            var layer = new ArcGISDynamicMapServiceLayer
+            ("http://localhost:6080/arcgis/rest/services/Test/MyService/MapServer");
+            map.addLayer(layer)
+            var toolbar = new Draw(map, { showTooltips: true });
+
+            var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASH, new dojo.Color([255, 0, 0]), 3);
+            var marker= new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE,10, lineSymbol, new dojo.Color([255, 0, 0]));
+            var fill= new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol,  new dojo.Color([255, 0, 0]));
+            on(toolbar,"draw-complete", function (result) {
+                var geometry=result.geometry;
+                var type=geometry.type;
+                var graphic;
+                switch (type) {
+                    case "point":
+                        graphic= new Graphic(geometry, marker);
+                        break;
+                    case "polyline":
+                        graphic= new Graphic(geometry, lineSymbol);
+                        break;
+                    case "polygon":
+                        graphic= new Graphic(geometry, fill);
+                        break;
+                }
+
+                map.graphics.add(graphic);
+                toolbar.deactivate();
+            });
+           query("button").on("click",function(event){
+            var value=event.rangeParent.data;
+            switch(value){
+                case "绘制点":{
+                    toolbar.activate(Draw.POINT, {
+                        showTooltips:true
+                    })
+                    break;
+
+                }
+                case "绘制折线":{
+                    toolbar.activate(Draw.POLYLINE, {
+                        showTooltips:true
+                    })
+                    break;
+                }
+                case "绘制面":{
+                    toolbar.activate(Draw.POLYGON, {
+                        showTooltips:true
+                    })
+                    break;
+                }
+                case "徒手线":{
+                    toolbar.activate(Draw.FREEHAND_POLYLINE, {
+                        showTooltips:true
+                    })
+                    break;
+                }
+                case "徒手面":{
+                    toolbar.activate(Draw.FREEHAND_POLYGON, {
+                        showTooltips:true
+                    })
+                    break;
+                }
+
+            }
+           });
+        });
+
+
+    </script>
+</head>
+<body>
+    <div id="MyMapDiv" class="MapClass"></div>
+    <button>绘制点</button>
+    <button>绘制折线</button>
+    <button>绘制面</button>
+    <button>徒手线</button>
+    <button>徒手面</button>
+</body>
+</html>
