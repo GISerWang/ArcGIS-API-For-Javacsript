@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>缓冲区分析</title>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/dijit/themes/tundra/tundra.css"/>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/esri/css/esri.css" />
+    <script  type="text/Javascript" src="http://localhost/arcgis_js_api/library/3.17/3.17/init.js"></script>
+    <style type="text/css">
+        .MapClass{
+            width:100%;
+            height:500px;
+            border:1px solid #000;
+        }
+    </style>
+    <script type="text/javascript">
+
+        require(["esri/map",
+			"dojo/dom","dojo/on",
+            "esri/layers/ArcGISDynamicMapServiceLayer",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/symbols/SimpleFillSymbol",
+            "esri/toolbars/draw",
+            "esri/graphic",
+            "esri/tasks/GeometryService",
+            "esri/tasks/BufferParameters",
+			"dojo/colors",
+            "dojo/domReady!"],
+            function (Map,dom,on,
+                ArcGISDynamicMapServiceLayer,
+                SimpleMarkerSymbol,
+                SimpleLineSymbol,
+                SimpleFillSymbol,
+                Draw,
+                Graphic,
+                GeometryService,
+                BufferParameters,Color) {
+                var map = new esri.Map("mapDiv");
+                var layer = new esri.layers.ArcGISDynamicMapServiceLayer
+                ("http://localhost:6080/arcgis/rest/services/Test/ft/MapServer");
+                map.addLayer(layer);
+				//创建几何服务对象
+                var geometryServices = new GeometryService("http://localhost:6080/arcgis/rest/services/Utilities/Geometry/GeometryServer");
+				//创建缓存参数对象
+				var params = new BufferParameters();
+				
+                //使用toolbar上的绘图工具
+                var toolBar = new Draw(map);
+				//创建点符号
+                var pointSymbol = new SimpleMarkerSymbol();
+                pointSymbol.style = SimpleMarkerSymbol.STYLE_CIRCLE;
+                pointSymbol.setSize(12);
+                pointSymbol.setColor(new Color("#FFFFCC"));
+                //线符号
+                lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASH, new Color([255, 0, 0]), 3);
+                //面符号
+                polygonSymbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol, new Color([255, 255, 0, 0.25]));
+				//给画点按钮绑定事件
+				on(dom.byId("point"),"click",function(){
+					//激活画点工具
+					toolBar.activate(Draw.POINT, {
+                        showTooltips:true
+                    })
+					
+				})
+				//绘图结束绑定事件
+				on(toolBar,"draw-end",function(result){
+					//获得点形状
+					var geometry=result.geometry;
+					//创建Graphic
+					var graphicpoint = new Graphic(geometry, pointSymbol);
+                    map.graphics.add(graphicpoint); 
+					//关闭绘图工具
+                    toolBar.deactivate();
+					//很重要！！！在这里构建缓冲区分析的形状属性
+					//注意这里可以放一个数组，此处为了方便我们只对一个形状进行缓冲区分析
+					params.geometries  = [ geometry ];
+
+					
+				})
+				//给缓冲区分析按钮绑定事件
+                on(dom.byId("Btn"),"click",function(){
+					//缓冲距离
+					params.distances = [ "80" ];
+					//空间参考
+					params.bufferSpatialReference = map.spatialReference;
+					params.outSpatialReference = map.spatialReference;
+					//执行分析处理结果
+					geometryServices.buffer(params,function(result){
+						//处理缓冲区分析得到的结果
+						for(var idx in result)
+						{	
+							//创建Graphic
+							var graphic=new Graphic(result[idx],polygonSymbol)
+							//将每一个结果都放在map中
+							map.graphics.add(graphic)
+						}
+					});
+
+
+				})
+               
+            });
+    </script>
+</head>
+<body>
+    <div id="mapDiv" class="MapClass"></div>
+    <input id="point" type="button" value="点"/>
+    <input id="Btn" type="button" value="缓冲区分析" />
+</body>
+</html>
