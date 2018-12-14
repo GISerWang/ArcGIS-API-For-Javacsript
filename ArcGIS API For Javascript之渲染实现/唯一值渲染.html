@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>UniqueValueRenderer</title>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/dijit/themes/tundra/tundra.css"/>
+    <link  rel="stylesheet"  type="text/css" href="http://localhost/arcgis_js_api/library/3.17/3.17/esri/css/esri.css" />
+    <script  type="text/Javascript" src="http://localhost/arcgis_js_api/library/3.17/3.17/init.js"></script>
+    <style type="text/css">
+        .MapClass{
+            width:100%;
+            height:600px;
+            border:1px solid #000;
+        }
+    </style>
+    <script type="text/javascript">
+
+        require(["esri/map",
+                    "esri/layers/ArcGISDynamicMapServiceLayer",
+                    "dojo/on",
+                    "dojo/dom",
+                    "dojo/colors",
+                    "esri/symbols/SimpleFillSymbol",
+                    "esri/layers/FeatureLayer",
+                    "esri/symbols/SimpleLineSymbol",
+                    "esri/renderers/UniqueValueRenderer",
+                    "dojo/domReady!"],
+                function (Map, ArcGISDynamicMapServiceLayer,on,dom,Color,SimpleFillSymbol, FeatureLayer, SimpleLineSymbol,UniqueValueRenderer) {
+                    var map = new esri.Map("MyMapDiv");
+                    var layer = new ArcGISDynamicMapServiceLayer("http://localhost:6080/arcgis/rest/services/Test/ft/MapServer");
+                    map.addLayer(layer);
+                    //获得id为btn的DOM元素
+                    var btn=dom.byId("btn");
+                    //绑定相应的事件
+                    on(btn,"click",function(){
+                        //定义一个要素图层
+                        var featureLayer = new FeatureLayer(
+                        "http://localhost:6080/arcgis/rest/services/Test/ft/MapServer/1",
+                         {
+                            mode:FeatureLayer.MODE_SNAPSHOT,
+                            outFields: ["*"]
+                         });
+                        //定义线符号
+                        var lineSymbol=new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASH, new Color([255, 0, 0]), 3);
+                        //定义面符号
+                        var fill=new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol,new Color("#FFFFCC"));
+                        //定义唯一值渲染器，对字段alias进行渲染，fill是默认的渲染符号
+                        var renderer = new UniqueValueRenderer(fill, "alias");
+                        //设置渲染的方式
+                        renderer.addValue("C区宿舍", new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol,new Color([0, 255, 0, 0.5])));
+                        renderer.addValue("B区宿舍", new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol,new Color([0, 0, 255, 0.5])));
+                        renderer.addValue("A区宿舍",new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol,new Color([255, 0, 255, 0.5])));
+                        renderer.addValue("公共出口", new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol,new Color([255, 255, 255, 0.75])));
+                        featureLayer.setRenderer(renderer);
+                        map.addLayer(featureLayer);              
+                    })  
+                });
+
+
+    </script>
+</head>
+<body>
+<div id="MyMapDiv" class="MapClass"></div>
+<button id="btn">渲染</button>
+</body>
+</html>
